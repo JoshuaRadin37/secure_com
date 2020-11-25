@@ -1,0 +1,16 @@
+[package]
+name = "secure_communication"
+version = "0.1.0"
+authors = ["Joshua Radin <jradin16@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num-bigint = { version="0.3.1", features = ["rand"]}
+rand = "0.7.3"
+num-traits = "0.2.14"
+num-iter = "0.1.42"
+num-integer = "0.1.44"
+num-rational = "0.3.2"
+num = "0.3.1"
