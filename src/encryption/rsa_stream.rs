@@ -1,4 +1,4 @@
-use crate::encryption::rsa::{PrivateKey, RSAMessage, PublicKey};
+use crate::encryption::rsa::{PrivateKey, RSAMessage, PublicKey, RSAKeys};
 use std::io::{Read, BufReader, BufRead, Write};
 use std::collections::VecDeque;
 use num_bigint::BigUint;
@@ -85,10 +85,12 @@ impl <W> Write for RSAWriter<W> where W : Write {
     }
 }
 
+
 #[cfg(test)]
 mod tests {
-    use crate::encryption::rsa::{RSAKeysGenerator, RSAWriter, RSAReader};
-    use std::io::{BufWriter, Cursor, Write, BufReader, Read};
+    use crate::encryption::rsa::{RSAKeysGenerator, RSAWriter, RSAReader, RSAStream};
+    use std::io::{BufWriter, Cursor, Write, BufReader, Read, BufRead};
+    use std::sync::Mutex;
 
     #[test]
     fn read_and_write_small() {
@@ -99,7 +101,7 @@ mod tests {
             write!(writer, "Hello, World!").unwrap();
         }
         {
-            let mut reader = RSAReader::new(keys.private_key(), &*inner);
+            let reader = RSAReader::new(keys.private_key(), &*inner);
             let mut buf_reader = BufReader::new(reader);
             let mut all = Vec::new();
             buf_reader.read_to_end(&mut all).unwrap();
@@ -108,5 +110,45 @@ mod tests {
         }
 
     }
+
+
+    #[test]
+    fn read_and_write_med() {
+        let keys = RSAKeysGenerator::new(512).generate_keys();
+        let mut inner: Vec<u8> = Vec::new();
+        {
+            let mut writer = RSAWriter::new(keys.public_key(), &mut inner);
+            write!(writer, "Hello, World!").unwrap();
+        }
+        {
+            let reader = RSAReader::new(keys.private_key(), &*inner);
+            let mut buf_reader = BufReader::new(reader);
+            let mut all = Vec::new();
+            buf_reader.read_to_end(&mut all).unwrap();
+            let string = String::from_utf8(all).unwrap();
+            assert_eq!(string, "Hello, World!");
+        }
+
+    }
+
+    #[test]
+    fn read_and_write_big() {
+        let keys = RSAKeysGenerator::new(2048).generate_keys();
+        let mut inner: Vec<u8> = Vec::new();
+        {
+            let mut writer = RSAWriter::new(keys.public_key(), &mut inner);
+            write!(writer, "Hello, World!").unwrap();
+        }
+        {
+            let reader = RSAReader::new(keys.private_key(), &*inner);
+            let mut buf_reader = BufReader::new(reader);
+            let mut all = Vec::new();
+            buf_reader.read_to_end(&mut all).unwrap();
+            let string = String::from_utf8(all).unwrap();
+            assert_eq!(string, "Hello, World!");
+        }
+
+    }
+
 }
 

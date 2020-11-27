@@ -3,3 +3,4 @@
 //! symmetric encryption
 
 pub mod rsa;
+pub mod aes
