@@ -4,7 +4,6 @@ use std::str::FromStr;
 use std::string::FromUtf8Error;
 
 use num_bigint::BigUint;
-use rand::{random, Rng};
 
 pub use generator::*;
 pub use rsa_stream::*;

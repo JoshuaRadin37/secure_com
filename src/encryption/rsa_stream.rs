@@ -1,4 +1,4 @@
-use crate::encryption::rsa::{PrivateKey, RSAMessage, PublicKey, RSAKeys};
+use crate::encryption::rsa::{PrivateKey, RSAMessage, PublicKey};
 use std::io::{Read, BufReader, BufRead, Write};
 use std::collections::VecDeque;
 use num_bigint::BigUint;
@@ -88,9 +88,8 @@ impl <W> Write for RSAWriter<W> where W : Write {
 
 #[cfg(test)]
 mod tests {
-    use crate::encryption::rsa::{RSAKeysGenerator, RSAWriter, RSAReader, RSAStream};
-    use std::io::{BufWriter, Cursor, Write, BufReader, Read, BufRead};
-    use std::sync::Mutex;
+    use crate::encryption::rsa::{RSAKeysGenerator, RSAWriter, RSAReader};
+    use std::io::{Write, BufReader, Read};
 
     #[test]
     fn read_and_write_small() {

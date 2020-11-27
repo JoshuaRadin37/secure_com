@@ -1,12 +1,10 @@
 use num::bigint::ToBigInt;
 use num_bigint::{BigInt, BigUint};
+use num_integer::lcm;
 use num_traits::{One, Zero};
 use rand::Rng;
 
 use crate::encryption::rsa::RSAKeys;
-use num_rational::BigRational;
-use num::FromPrimitive;
-use num_integer::{Integer, lcm};
 
 /// Can generate pairs of RSA keys
 pub struct RSAKeysGenerator {
