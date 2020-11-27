@@ -7,7 +7,7 @@ use aes::cipher::stream::generic_array::GenericArray;
 use num::Num;
 use num_bigint::{BigUint, ParseBigIntError};
 use rand::random;
-use std::io::Write;
+use aes::cipher::generic_array::functional::FunctionalSequence;
 
 #[path="./aes_stream.rs"]
 pub mod aes_stream;
@@ -83,9 +83,9 @@ impl AESManager {
         format!("{:x}", big_uint)
     }
 
-    pub fn encrypt<S : AsRef<str>>(&self, message: S) -> Vec<[u8; 16]> {
+    pub fn encrypt<S : AsRef<[u8]>>(&self, message: S) -> Vec<[u8; 16]> {
         let string = message.as_ref();
-        let bytes: Vec<u8> = string.bytes().collect();
+        let bytes: Vec<u8> = string.to_vec();
         let mut vector = vec![];
         let total = bytes.len() / 16 + if bytes.len() % 16 > 0 { 1 } else { 0 };
         for i in 0..total {
@@ -99,20 +99,44 @@ impl AESManager {
             match &self.key {
                 Key::Aes128(k) => {
                     let mut block = GenericArray::clone_from_slice(&array);
-                    k.encrypt_block(&mut block)
+                    k.encrypt_block(&mut block);
+                    array.clone_from_slice(block.as_slice());
                 }
                 Key::Aes192(k) => {
                     let mut block = GenericArray::clone_from_slice(&array);
                     k.encrypt_block(&mut block);
+                    array.clone_from_slice(block.as_slice());
                 }
                 Key::Aes256(k) => {
                     let mut block = GenericArray::clone_from_slice(&array);
                     k.encrypt_block(&mut block);
+                    array.clone_from_slice(block.as_slice());
                 }
             }
             vector.push(array);
         }
         vector
+    }
+
+    pub fn decrypt<V : AsRef<[[u8; 16]]>>(&self, blocks: V) -> Vec<u8> {
+        let blocks = blocks.as_ref();
+        let mut output = vec![];
+        for block in blocks {
+            let mut block = GenericArray::clone_from_slice(block);
+            match &self.key {
+                Key::Aes128(k) => {
+                    k.decrypt_block(&mut block);
+                }
+                Key::Aes192(k) => {
+                    k.decrypt_block(&mut block);
+                }
+                Key::Aes256(k) => {
+                    k.decrypt_block(&mut block);
+                }
+            }
+            block.map(|b| output.push(b));
+        }
+        output
     }
 }
 
