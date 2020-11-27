@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn prime_test_accurate() {
-        let iterator = (2..6).into_iter().map(|i| 2u16.pow(i));
+        let iterator = (4..6).into_iter().map(|i| 2u16.pow(i));
         for key_size in iterator {
             let generator = RSAKeysGenerator::new(key_size);
             for _ in 0..100 {
@@ -201,7 +201,7 @@ mod tests {
 
     #[test]
     fn generate_rsa_keys_small() {
-        let generator = RSAKeysGenerator::new(5);
+        let generator = RSAKeysGenerator::new(32);
         unsafe {
             let keys = generator.generate_keys_unchecked();
             assert!(keys.valid())

@@ -97,4 +97,28 @@ mod tests {
         assert_eq!(string, TEST_MESSAGE);
 
     }
+
+
+
+    #[test]
+    fn read_and_write_128_long_message() {
+        let key = AESManager::new(KeySize::K128);
+        let mut array: Vec<u8> = Vec::new();
+        let longer = TEST_MESSAGE.repeat(40);
+        {
+            let mut writer = AESWriter::new(&key, &mut array);
+            write!(writer, "{}", longer).unwrap();
+        }
+        match String::from_utf8(array.clone()) {
+            Ok(o) => {
+                assert_ne!(o, longer)
+            }
+            Err(_) => {}
+        }
+        let mut reader = AESReader::new(&key, &*array);
+        let mut string = String::new();
+        let length = reader.read_to_string(&mut string).unwrap();
+        assert_eq!(string, longer);
+
+    }
 }
