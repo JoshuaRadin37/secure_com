@@ -68,6 +68,12 @@ pub struct AESManager {
     key: Key
 }
 
+impl PartialEq for AESManager {
+    fn eq(&self, other: &Self) -> bool {
+        self.key_value == other.key_value
+    }
+}
+
 impl AESManager {
 
     pub fn new(key_size: KeySize) -> Self {

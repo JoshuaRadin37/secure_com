@@ -5,6 +5,8 @@ use std::string::FromUtf8Error;
 
 use num_bigint::BigUint;
 
+use regex::Regex;
+
 pub use generator::*;
 pub use rsa_stream::*;
 
@@ -121,28 +123,53 @@ impl PublicKey {
 impl <S : AsRef<str>> From<S> for PublicKey {
     /// Format is <n> <e>
     fn from(str: S) -> Self {
-        let str = str.as_ref();
-        let split = str.trim().split_whitespace().collect::<Vec<&str>>();
-        let n: BigUint = split[0].parse().expect("Public Key in incorrect format, couldn't parse n value");
-        let e: BigUint = split[1].parse().expect("Public key in incorrect format, couldn't parse e value");
-        Self {
-            key: e,
-            n_value: n
-        }
+        PublicKey::from_str(str.as_ref()).unwrap()
     }
 }
 
-impl FromStr for PublicKey {
-    type Err = ();
+#[derive(Debug)]
+pub struct PublicKeyParseError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        std::panic::catch_unwind(|| PublicKey::from(s)).map_err(|_| ())
+impl Display for PublicKeyParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for PublicKeyParseError { }
+
+
+impl FromStr for PublicKey {
+    type Err = PublicKeyParseError;
+
+    fn from_str(str: &str) -> Result<Self, Self::Err> {
+        lazy_static! {
+            static ref RE: Regex = Regex::new("\\((\\d+),(\\d+)\\)").unwrap();
+        }
+
+        let captures = RE.captures(str);
+        if let Some(captures) = captures {
+            if let (Some(n), Some(e)) = (captures.get(1), captures.get(2)) {
+                let n: BigUint = captures.get(1).unwrap().as_str().parse().expect("n not an integer");
+                let e: BigUint = captures.get(2).unwrap().as_str().parse().expect("e not an integer");
+
+                Ok(Self {
+                    key: e,
+                    n_value: n
+                })
+            } else{
+                Err(PublicKeyParseError)
+            }
+
+        } else {
+            Err(PublicKeyParseError)
+        }
     }
 }
 
 impl Display for PublicKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}, {})", self.n_value, self.key)
+        write!(f, "({},{})", self.n_value, self.key)
     }
 }
 
@@ -350,4 +377,17 @@ mod tests {
         }
         println!("Public: {:?}, Private: {:?}", public_key, private_key);
     }
+
+    #[test]
+    fn public_key_parsing() {
+        let key1 = "(4,7)";
+        let result = PublicKey::from_str(key1);
+        assert!(result.is_ok());
+        let unwrap = result.unwrap();
+        assert_eq!(unwrap.n_value, BigUint::from(4usize));
+        assert_eq!(unwrap.key, BigUint::from(7usize));
+        let key2 = "(asds)[[]";
+        assert!(PublicKey::from_str(key2).is_err());
+    }
 }
+
